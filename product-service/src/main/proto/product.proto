@@ -13,6 +13,8 @@ message ProductModel {
   string description = 3;
   double price = 4;
   string category = 5;
+  string sku = 6;
+  bool in_stock = 7;
 }
 
 message ProductEvent {

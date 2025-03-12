@@ -43,6 +43,8 @@ public class ProductService {
                         .setDescription(saved.getDescription())
                         .setPrice(saved.getPrice().doubleValue())
                         .setCategory(saved.getCategory())
+                        .setInStock(saved.getInStock())
+                        .setSku(saved.getSku())
                         .build();
 
         Instant instant = Instant.now();
