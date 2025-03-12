@@ -1,8 +1,9 @@
 package com.kaizenflow.commerce.product.serializer;
 
-import com.google.protobuf.GeneratedMessage;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Serializer;
+
+import com.google.protobuf.GeneratedMessage;
 
 public class SimpleProtobufSerializer<T extends GeneratedMessage> implements Serializer<T> {
 
@@ -18,5 +19,4 @@ public class SimpleProtobufSerializer<T extends GeneratedMessage> implements Ser
             throw new SerializationException("Error serializing Protobuf message", e);
         }
     }
-
 }

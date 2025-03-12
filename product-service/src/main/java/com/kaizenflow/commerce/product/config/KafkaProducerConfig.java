@@ -1,7 +1,8 @@
 package com.kaizenflow.commerce.product.config;
 
-import com.kaizenflow.commerce.product.serializer.SimpleProtobufSerializer;
-import com.kaizenflow.commerce.proto.product.ProductEvent;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,8 +11,8 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.kaizenflow.commerce.product.serializer.SimpleProtobufSerializer;
+import com.kaizenflow.commerce.proto.product.ProductEvent;
 
 public class KafkaProducerConfig {
 

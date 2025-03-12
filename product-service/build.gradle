@@ -1,8 +1,21 @@
+buildscript {
+	ext {
+		// Plugin versions
+		springBootVersion = '3.4.3'
+		springDependencyManagementVersion = '1.1.7'
+		spotlessVersion = '6.25.0'
+
+		// Dependency versions
+		springDocVersion = '2.7.0'
+	}
+}
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.3'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id "com.google.protobuf" version "0.9.4"
+	id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group = 'com.kaizenflow.commerce'
@@ -25,6 +38,7 @@ repositories {
 }
 
 dependencies {
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
@@ -63,5 +77,22 @@ protobuf {
 		all()*.plugins {
 			grpc {}
 		}
+	}
+}
+
+spotless {
+	java {
+		googleJavaFormat()
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		indentWithTabs(2)
+		indentWithSpaces(4)
+		endWithNewline()
+		importOrder('java', 'javax', 'org', 'com', '')
+	}
+
+	groovyGradle {
+		target '*.gradle'
+		greclipse()
 	}
 }
