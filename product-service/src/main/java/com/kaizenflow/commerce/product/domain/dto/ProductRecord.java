@@ -20,6 +20,4 @@ public record ProductRecord(
         Integer availableQuantity,
         LocalDateTime inventoryLastUpdated,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
-) {
-}
+        LocalDateTime updatedAt) {}

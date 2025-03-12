@@ -1,21 +1,21 @@
 package com.kaizenflow.commerce.product.mappers;
 
-import com.kaizenflow.commerce.product.domain.dto.ProductRecord;
-import com.kaizenflow.commerce.product.domain.models.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.kaizenflow.commerce.product.domain.dto.ProductRecord;
+import com.kaizenflow.commerce.product.domain.models.Product;
+
 /**
  * MapStruct mapper for converting between Product entity and ProductRecord.
  *
- * This interface will be implemented automatically by MapStruct during compile-time
- * to generate efficient mapping code between the entity and Record.
+ * <p>This interface will be implemented automatically by MapStruct during compile-time to generate
+ * efficient mapping code between the entity and Record.
  */
 @Mapper(
         componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL
-)
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
 public interface ProductMapper {
 
     /**
