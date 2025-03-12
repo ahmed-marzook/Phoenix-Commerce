@@ -66,21 +66,6 @@ services:
     networks:
       - phoenix-commerce-network
 
-  # MongoDB Express (optional but helpful)
-  phoenix-mongo-express:
-    image: mongo-express:latest
-    container_name: phoenix-commerce-mongo-express
-    depends_on:
-      - phoenix-mongodb
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_SERVER: phoenix-mongodb
-    networks:
-      - phoenix-commerce-network
-
   # Redis Service
   phoenix-redis:
     image: redis:latest
