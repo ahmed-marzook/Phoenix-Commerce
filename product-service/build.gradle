@@ -4,18 +4,21 @@ buildscript {
 		springBootVersion = '3.4.3'
 		springDependencyManagementVersion = '1.1.7'
 		spotlessVersion = '6.25.0'
+		protobufPluginVersion = '0.9.4'
 
 		// Dependency versions
 		springDocVersion = '2.7.0'
+		protobufVersion = '4.30.0'
+		grpcVersion = '1.71.0'
 	}
 }
 
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.4.3'
-	id 'io.spring.dependency-management' version '1.1.7'
-	id "com.google.protobuf" version "0.9.4"
-	id 'com.diffplug.spotless' version '6.25.0'
+	id 'org.springframework.boot' version "${springBootVersion}"
+	id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+	id 'com.google.protobuf' version "${protobufPluginVersion}"
+	id 'com.diffplug.spotless' version "${spotlessVersion}"
 }
 
 group = 'com.kaizenflow.commerce'
@@ -42,8 +45,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
-	implementation 'com.google.protobuf:protobuf-java:4.30.0'
-	implementation 'com.google.protobuf:protobuf-java-util:4.30.0'
+	implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+	implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -66,11 +69,11 @@ sourceSets {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.30.0"
+		artifact = "com.google.protobuf:protoc:${protobufVersion}"
 	}
 	plugins {
 		grpc {
-			artifact = "io.grpc:protoc-gen-grpc-java:1.71.0"
+			artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
 		}
 	}
 	generateProtoTasks {
