@@ -30,8 +30,11 @@ public class ProductService {
     private final KafkaTemplate<String, ProductEvent> kafkaTemplate;
     private final ProductMapper productMapper;
 
-    @Value("${kafka.topic.product-events}")
-    private String productTopic;
+    @Value("${kafka.topic.product-created-events}")
+    private String productCreatedEventsTopic;
+
+    @Value("${kafka.topic.product-updated-events}")
+    private String productUpdatedEventsTopic;
 
     @Autowired
     public ProductService(
@@ -88,7 +91,8 @@ public class ProductService {
     }
 
     /**
-     * Publishes a product event to Kafka with the specified event type.
+     * Publishes a product event to Kafka with the specified event type. Uses different topics based
+     * on the event type.
      *
      * @param product The product to publish
      * @param eventType The type of event (CREATED, UPDATED, etc.)
@@ -108,10 +112,22 @@ public class ProductService {
                         .setProduct(protoProduct)
                         .build();
 
-        // Publish to Kafka
-        kafkaTemplate.send(productTopic, product.getId(), event);
+        // Choose the appropriate topic based on event type
+        String topicName;
+        if (eventType == ProductEvent.EventType.CREATED) {
+            topicName = productCreatedEventsTopic;
+        } else {
+            topicName = productUpdatedEventsTopic;
+        }
 
-        log.info("Published {} event for product ID: {}", eventType, product.getId());
+        // Publish to the selected Kafka topic
+        kafkaTemplate.send(topicName, product.getId(), event);
+
+        log.info(
+                "Published {} event for product ID: {} to topic: {}",
+                eventType,
+                product.getId(),
+                topicName);
     }
 
     /**
@@ -193,19 +209,10 @@ public class ProductService {
                 availableQuantity,
                 inStock);
 
-        // Publish a product updated event
-        publishProductUpdatedEvent(product);
+        // No need to publish a product update event here to avoid circular events
+        // The inventory service is already aware of this update since it initiated it
 
         return true;
-    }
-
-    /**
-     * Publishes a product updated event to Kafka.
-     *
-     * @param product The updated product
-     */
-    private void publishProductUpdatedEvent(Product product) {
-        publishProductEvent(product, ProductEvent.EventType.UPDATED);
     }
 
     /**

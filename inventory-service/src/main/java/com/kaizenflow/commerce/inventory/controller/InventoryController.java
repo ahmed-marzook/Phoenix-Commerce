@@ -44,7 +44,10 @@ public class InventoryController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Inventory> getInventoryById(@PathVariable String id) {
-        return ResponseEntity.ok(inventoryService.findInventoryById(id));
+        return inventoryService
+                .getInventoryById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/product/{productId}")
@@ -76,7 +79,7 @@ public class InventoryController {
     }
 
     /**
-     * Updates the quantity of an existing inventory.
+     * Updates the quantity of an existing inventory using inventory ID.
      *
      * @param id The inventory ID
      * @param request The update request containing the new quantity
@@ -84,9 +87,9 @@ public class InventoryController {
      */
     @PutMapping("/{id}")
     @Operation(
-            summary = "Update inventory quantity",
+            summary = "Update inventory quantity by ID",
             description =
-                    "Updates the quantity of an existing inventory and returns the updated inventory data")
+                    "Updates the quantity of an existing inventory using inventory ID and returns the updated inventory data")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Successfully updated inventory"),
@@ -126,10 +129,71 @@ public class InventoryController {
         }
     }
 
+    /**
+     * Updates the quantity of an existing inventory using product SKU.
+     *
+     * @param productSku The product SKU
+     * @param request The update request containing the new quantity
+     * @return ResponseEntity with updated inventory data
+     */
+    @PutMapping("/sku/{productSku}")
+    @Operation(
+            summary = "Update inventory quantity by product SKU",
+            description =
+                    "Updates the quantity of an existing inventory using product SKU and returns the updated inventory data")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Successfully updated inventory"),
+                @ApiResponse(responseCode = "400", description = "Invalid input or validation error"),
+                @ApiResponse(responseCode = "404", description = "Inventory not found"),
+                @ApiResponse(responseCode = "500", description = "Internal server error")
+            })
+    public ResponseEntity<InventoryRecord> updateInventoryByProductSku(
+            @Parameter(description = "Product SKU", required = true) @PathVariable String productSku,
+            @Parameter(description = "Update inventory request", required = true) @Valid @RequestBody
+                    UpdateInventoryRequest request) {
+
+        log.info(
+                "Received request to update inventory with product SKU: {}, new quantity: {}",
+                productSku,
+                request.availableQuantity());
+
+        try {
+            // Call service to update inventory by product SKU
+            Inventory updatedInventory =
+                    inventoryService.updateInventoryByProductSku(productSku, request.availableQuantity());
+
+            // Map to DTO and return
+            InventoryRecord response = inventoryMapper.inventoryToInventoryRecord(updatedInventory);
+
+            log.info("Successfully updated inventory with product SKU: {}", productSku);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            // Handle case where inventory is not found
+            log.error("Failed to update inventory: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Handle other unexpected errors
+            log.error("Error updating inventory", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInventory(@PathVariable String id) {
         try {
             inventoryService.deleteInventory(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/sku/{productSku}")
+    public ResponseEntity<Void> deleteInventoryByProductSku(@PathVariable String productSku) {
+        try {
+            inventoryService.deleteInventoryByProductSku(productSku);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();

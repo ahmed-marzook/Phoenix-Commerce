@@ -9,11 +9,19 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
 
-    @Value("${kafka.topic.product-events}")
-    private String topicName;
+    @Value("${kafka.topic.product-created-events}")
+    private String productCreatedEventsTopic;
+
+    @Value("${kafka.topic.product-updated-events}")
+    private String productUpdatedEventsTopic;
 
     @Bean
-    public NewTopic productEventsTopic() {
-        return TopicBuilder.name(topicName).build();
+    public NewTopic productCreatedTopic() {
+        return TopicBuilder.name(productCreatedEventsTopic).build();
+    }
+
+    @Bean
+    public NewTopic productUpdatedEventsTopic() {
+        return TopicBuilder.name(productUpdatedEventsTopic).build();
     }
 }

@@ -46,6 +46,10 @@ public class InventoryService {
         return inventoryRepository.findByProductSku(productSku);
     }
 
+    public Optional<Inventory> getInventoryById(String id) {
+        return inventoryRepository.findById(id);
+    }
+
     // Get inventory by warehouse ID
     public List<Inventory> getInventoryByWarehouse(String warehouseId) {
         return inventoryRepository.findByWarehouseId(warehouseId);
@@ -75,7 +79,8 @@ public class InventoryService {
     }
 
     /**
-     * Updates an existing inventory with a new quantity and sends an update event.
+     * Updates an existing inventory with a new quantity and sends an update event. Uses the inventory
+     * ID to find the inventory record.
      *
      * @param id The inventory ID
      * @param availableQuantity The new available quantity
@@ -85,6 +90,31 @@ public class InventoryService {
     public Inventory updateInventory(String id, Integer availableQuantity) {
         // Find and validate inventory exists
         Inventory inventory = findInventoryById(id);
+
+        // Update inventory with new quantity
+        updateInventoryQuantity(inventory, availableQuantity);
+
+        // Save changes
+        Inventory saved = inventoryRepository.save(inventory);
+
+        // Send inventory update event
+        sendInventoryUpdateEvent(saved);
+
+        return saved;
+    }
+
+    /**
+     * Updates an existing inventory with a new quantity and sends an update event. Uses the product
+     * SKU to find the inventory record.
+     *
+     * @param productSku The product SKU
+     * @param availableQuantity The new available quantity
+     * @return The updated inventory entity
+     * @throws IllegalArgumentException if inventory with the given product SKU is not found
+     */
+    public Inventory updateInventoryByProductSku(String productSku, Integer availableQuantity) {
+        // Find and validate inventory exists by product SKU
+        Inventory inventory = findInventoryByProductSku(productSku);
 
         // Update inventory with new quantity
         updateInventoryQuantity(inventory, availableQuantity);
@@ -139,10 +169,24 @@ public class InventoryService {
      * @return The found inventory entity
      * @throws IllegalArgumentException if inventory with the given ID is not found
      */
-    public Inventory findInventoryById(String id) {
-        return inventoryRepository
-                .findById(id)
+    private Inventory findInventoryById(String id) {
+        return getInventoryById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory with ID " + id + " not found"));
+    }
+
+    /**
+     * Finds an inventory by product SKU or throws an exception if not found.
+     *
+     * @param productSku The product SKU
+     * @return The found inventory entity
+     * @throws IllegalArgumentException if inventory with the given product SKU is not found
+     */
+    private Inventory findInventoryByProductSku(String productSku) {
+        return getInventoryByProductSku(productSku)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "Inventory with product SKU " + productSku + " not found"));
     }
 
     /**
@@ -203,6 +247,16 @@ public class InventoryService {
             inventoryRepository.deleteById(id);
         } else {
             throw new IllegalArgumentException("Inventory with ID " + id + " not found");
+        }
+    }
+
+    // Delete inventory by product SKU
+    public void deleteInventoryByProductSku(String productSku) {
+        Optional<Inventory> optionalInventory = inventoryRepository.findByProductSku(productSku);
+        if (optionalInventory.isPresent()) {
+            inventoryRepository.delete(optionalInventory.get());
+        } else {
+            throw new IllegalArgumentException("Inventory with product SKU " + productSku + " not found");
         }
     }
 

@@ -16,11 +16,17 @@ public class ProductEventListener {
 
     private final InventoryService inventoryService;
 
+    /** Listens for product creation events and creates initial inventory records. */
     @KafkaListener(
-            topics = "${kafka.topic.product-events}",
+            topics = "${kafka.topic.product-created-events}",
             containerFactory = "productEventKafkaListenerContainerFactory")
-    public void setProductEvent(ProductEvent productEvent) {
-        log.info("Received Product event with {}", productEvent.getProduct());
-        inventoryService.createInventory(productEvent);
+    public void handleProductCreatedEvent(ProductEvent productEvent) {
+        log.info(
+                "Received Product created event with product ID: {}", productEvent.getProduct().getId());
+
+        // Only process CREATED events
+        if (productEvent.getType() == ProductEvent.EventType.CREATED) {
+            inventoryService.createInventory(productEvent);
+        }
     }
 }
