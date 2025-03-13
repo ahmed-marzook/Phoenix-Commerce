@@ -52,7 +52,8 @@ public class Product {
     private Boolean active; // Flag indicating if product is active in the system
 
     // Optional - additional cached inventory info
-    @Builder.Default private Boolean inStock = Boolean.TRUE; // Flag indicating if product is currently in stock
+    @Builder.Default
+    private Boolean inStock = Boolean.TRUE; // Flag indicating if product is currently in stock
 
     private InventoryStatus
             inventoryStatus; // Status description (e.g., "In Stock", "Low Stock", "Out of Stock")

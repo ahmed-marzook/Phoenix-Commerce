@@ -3,10 +3,12 @@ package com.kaizenflow.commerce.product.service;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.kaizenflow.commerce.proto.inventory.InventoryUpdateEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.protobuf.Timestamp;
 import com.kaizenflow.commerce.product.domain.dto.ProductRecord;
@@ -16,7 +18,6 @@ import com.kaizenflow.commerce.product.mappers.ProductMapper;
 import com.kaizenflow.commerce.product.repository.ProductRepository;
 import com.kaizenflow.commerce.proto.product.ProductEvent;
 import com.kaizenflow.commerce.proto.product.ProductModel;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
