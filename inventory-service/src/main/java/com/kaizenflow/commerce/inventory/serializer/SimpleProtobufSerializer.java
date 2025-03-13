@@ -1,8 +1,9 @@
 package com.kaizenflow.commerce.inventory.serializer;
 
-import com.google.protobuf.GeneratedMessage;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Serializer;
+
+import com.google.protobuf.GeneratedMessage;
 
 public class SimpleProtobufSerializer<T extends GeneratedMessage> implements Serializer<T> {
 

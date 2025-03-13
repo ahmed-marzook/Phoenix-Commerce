@@ -1,9 +1,10 @@
 package com.kaizenflow.commerce.inventory.serializer;
 
-import com.google.protobuf.GeneratedMessage;
-import com.google.protobuf.Parser;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
+
+import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Parser;
 
 public class SimpleProtobufDeserializer<T extends GeneratedMessage> implements Deserializer<T> {
 
