@@ -1,33 +1,38 @@
+// Define versions in buildscript block for access throughout the build script
 buildscript {
 	ext {
-		// Plugin versions
+		// Plugin versions - defines the version of the Protobuf Gradle plugin
 		protobufPluginVersion = '0.9.4'
 
-		// Dependency versions
-		protobufVersion = '4.30.0'
-		grpcVersion = '1.71.0'
+		// Dependency versions - specifies Protocol Buffer and gRPC library versions
+		protobufVersion = '4.30.0'  // Protocol Buffers library version
+		grpcVersion = '1.71.0'      // gRPC framework version
 	}
 }
 
+// Apply necessary plugins
 plugins {
-	id 'java'
-	id 'com.google.protobuf' version "${protobufPluginVersion}"
-	id 'maven-publish'
+	id 'java'                                          // Core Java plugin for compilation
+	id 'com.google.protobuf' version "${protobufPluginVersion}"  // Protobuf plugin for .proto file processing
+	id 'maven-publish'                                 // For publishing artifacts to Maven repositories
 }
 
+// Define project coordinates (groupId and version in Maven terms)
 group = 'com.kaizenflow'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1-SNAPSHOT'  // SNAPSHOT indicates this is a development version
 
+// Configure publishing settings for the Maven artifacts
 publishing {
 	publications {
+		// Define a Maven publication named "maven"
 		maven(MavenPublication) {
-			groupId = group
-			artifactId = 'commerce-proto'
-			version = version
+			groupId = group                // Use the project's group
+			artifactId = 'commerce-proto'  // Name of the artifact
+			version = version              // Use the project's version
 
-			from components.java
+			from components.java           // Include the Java component (compiled classes, resources)
 
-			// Configure pom to include basic project information
+			// Configure pom to include basic project information for Maven Central
 			pom {
 				name = 'Commerce Proto'
 				description = 'Protocol Buffer definitions for commerce services'
@@ -35,46 +40,62 @@ publishing {
 		}
 	}
 
+	// Define where to publish the artifacts
 	repositories {
-		mavenLocal()
+		mavenLocal()  // Publish to the local Maven repository (~/.m2/repository)
 	}
 }
 
+// Configure Java toolchain
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(21)  // Use Java 21 for compilation
 	}
 }
 
+// Configure repositories for dependency resolution
 repositories {
-	mavenCentral()
+	mavenCentral()  // Use Maven Central for downloading dependencies
 }
 
+// Declare project dependencies
 dependencies {
+	// Protocol Buffers runtime libraries
 	implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
 	implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
 }
+
+// Configure Java source sets to include the generated code
 sourceSets {
 	main {
 		java {
-			srcDirs 'build/generated/source/proto/main/grpc'
-			srcDirs 'build/generated/source/proto/main/java'
+			// Include generated source directories in the compilation path
+			srcDirs 'build/generated/source/proto/main/grpc'    // For gRPC service code
+			srcDirs 'build/generated/source/proto/main/java'    // For protocol buffer message classes
 		}
 	}
 }
 
+// Configure Protobuf compilation
 protobuf {
+	// Define which protoc compiler to use (the Protocol Buffer compiler)
 	protoc {
 		artifact = "com.google.protobuf:protoc:${protobufVersion}"
 	}
+
+	// Configure additional compiler plugins
 	plugins {
 		grpc {
+			// Add the gRPC code generation plugin
 			artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
 		}
 	}
+
+	// Configure code generation tasks
 	generateProtoTasks {
+		// For all proto files, apply the gRPC plugin
 		all()*.plugins {
-			grpc {}
+			grpc {}  // Generate gRPC service code
 		}
 	}
 }
