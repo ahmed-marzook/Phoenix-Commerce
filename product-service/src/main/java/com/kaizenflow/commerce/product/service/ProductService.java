@@ -1,18 +1,22 @@
 package com.kaizenflow.commerce.product.service;
 
 import java.time.Instant;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.google.protobuf.Timestamp;
 import com.kaizenflow.commerce.product.domain.dto.ProductRecord;
+import com.kaizenflow.commerce.product.domain.dto.request.CreateProductRequest;
 import com.kaizenflow.commerce.product.domain.models.Product;
 import com.kaizenflow.commerce.product.mappers.ProductMapper;
 import com.kaizenflow.commerce.product.repository.ProductRepository;
 import com.kaizenflow.commerce.proto.product.ProductEvent;
 import com.kaizenflow.commerce.proto.product.ProductModel;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
@@ -23,6 +27,7 @@ public class ProductService {
     @Value("${kafka.topic.product-events}")
     private String productTopic;
 
+    @Autowired
     public ProductService(
             ProductRepository repository,
             KafkaTemplate<String, ProductEvent> kafkaTemplate,
@@ -32,8 +37,19 @@ public class ProductService {
         this.productMapper = productMapper;
     }
 
-    public ProductRecord createProduct(ProductRecord product) {
-        Product saved = repository.save(productMapper.productRecordToProduct(product));
+    @Transactional
+    public ProductRecord createProduct(CreateProductRequest createProductRequest) {
+        Product newProduct =
+                Product.builder()
+                        .sku(UUID.randomUUID())
+                        .name(createProductRequest.name())
+                        .description(createProductRequest.description())
+                        .price(createProductRequest.price())
+                        .category(createProductRequest.category())
+                        .tags(createProductRequest.tags())
+                        .brand(createProductRequest.brand())
+                        .build();
+        Product saved = repository.save(newProduct);
 
         // Create Protobuf message
         ProductModel protoProduct =
@@ -44,7 +60,7 @@ public class ProductService {
                         .setPrice(saved.getPrice().doubleValue())
                         .setCategory(saved.getCategory())
                         .setInStock(saved.getInStock())
-                        .setSku(saved.getSku())
+                        .setSku(saved.getSku().toString())
                         .build();
 
         Instant instant = Instant.now();

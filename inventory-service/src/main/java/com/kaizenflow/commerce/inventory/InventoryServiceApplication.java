@@ -1,4 +1,4 @@
-package com.kaizenflow.commerce.inventory_service;
+package com.kaizenflow.commerce.inventory;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

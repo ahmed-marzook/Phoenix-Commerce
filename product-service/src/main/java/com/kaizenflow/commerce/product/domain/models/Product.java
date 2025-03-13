@@ -3,6 +3,7 @@ package com.kaizenflow.commerce.product.domain.models;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -38,7 +39,7 @@ public class Product {
     private BigDecimal price; // Sale price to customers
 
     @Indexed(unique = true)
-    private String sku; // MongoDB: Creates a unique index on SKU (Stock Keeping Unit)
+    private UUID sku; // MongoDB: Creates a unique index on SKU (Stock Keeping Unit)
 
     private BigDecimal costPrice; // Cost price (for calculating margins)
 
@@ -51,7 +52,7 @@ public class Product {
     private Boolean active; // Flag indicating if product is active in the system
 
     // Optional - additional cached inventory info
-    private Boolean inStock; // Flag indicating if product is currently in stock
+    @Builder.Default private Boolean inStock = Boolean.TRUE; // Flag indicating if product is currently in stock
 
     private InventoryStatus
             inventoryStatus; // Status description (e.g., "In Stock", "Low Stock", "Out of Stock")
