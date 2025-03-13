@@ -19,6 +19,17 @@ public class InventoryUpdateListener {
             topics = "${kafka.topic.inventory-events}",
             containerFactory = "inventoryUpdateEventKafkaListenerContainerFactory")
     public void updateInventoryStatus(InventoryUpdateEvent inventoryUpdateEvent) {
-        log.info("Received Inventory Update event with {}", inventoryUpdateEvent.getAvailableQuantity());
+        log.info(
+                "Received Inventory Update event with productId: {}, available quantity: {}, status: {}",
+                inventoryUpdateEvent.getProductId(),
+                inventoryUpdateEvent.getAvailableQuantity(),
+                inventoryUpdateEvent.getInventoryStatus());
+
+        // Delegate to product service
+        productService.updateProductInventory(
+                inventoryUpdateEvent.getProductId(),
+                inventoryUpdateEvent.getAvailableQuantity(),
+                inventoryUpdateEvent.getInventoryStatus(),
+                inventoryUpdateEvent.getInStock());
     }
 }
