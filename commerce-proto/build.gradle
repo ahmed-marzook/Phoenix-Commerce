@@ -1,0 +1,80 @@
+buildscript {
+	ext {
+		// Plugin versions
+		protobufPluginVersion = '0.9.4'
+
+		// Dependency versions
+		protobufVersion = '4.30.0'
+		grpcVersion = '1.71.0'
+	}
+}
+
+plugins {
+	id 'java'
+	id 'com.google.protobuf' version "${protobufPluginVersion}"
+	id 'maven-publish'
+}
+
+group = 'com.kaizenflow'
+version = '0.0.1-SNAPSHOT'
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			groupId = group
+			artifactId = 'commerce-proto'
+			version = version
+
+			from components.java
+
+			// Configure pom to include basic project information
+			pom {
+				name = 'Commerce Proto'
+				description = 'Protocol Buffer definitions for commerce services'
+			}
+		}
+	}
+
+	repositories {
+		mavenLocal()
+	}
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+	implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+}
+sourceSets {
+	main {
+		java {
+			srcDirs 'build/generated/source/proto/main/grpc'
+			srcDirs 'build/generated/source/proto/main/java'
+		}
+	}
+}
+
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:${protobufVersion}"
+	}
+	plugins {
+		grpc {
+			artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+		}
+	}
+	generateProtoTasks {
+		all()*.plugins {
+			grpc {}
+		}
+	}
+}

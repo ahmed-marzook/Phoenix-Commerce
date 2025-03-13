@@ -4,7 +4,6 @@ buildscript {
 		springBootVersion = '3.4.3'
 		springDependencyManagementVersion = '1.1.7'
 		spotlessVersion = '6.25.0'
-		protobufPluginVersion = '0.9.4'
 
 		// Dependency versions
 		springDocVersion = '2.7.0'
@@ -18,7 +17,6 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
-	id 'com.google.protobuf' version "${protobufPluginVersion}"
 	id 'com.diffplug.spotless' version "${spotlessVersion}"
 }
 
@@ -38,6 +36,7 @@ configurations {
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -49,6 +48,7 @@ dependencies {
 	implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
 	implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
 	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	implementation 'com.kaizenflow:commerce-proto:0.0.1-SNAPSHOT'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
@@ -59,31 +59,6 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
-}
-
-sourceSets {
-	main {
-		java {
-			srcDirs 'build/generated/source/proto/main/grpc'
-			srcDirs 'build/generated/source/proto/main/java'
-		}
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:${protobufVersion}"
-	}
-	plugins {
-		grpc {
-			artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
-		}
-	}
-	generateProtoTasks {
-		all()*.plugins {
-			grpc {}
-		}
-	}
 }
 
 spotless {
