@@ -4,23 +4,25 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.protobuf.Timestamp;
-import com.kaizenflow.commerce.inventory.domain.enums.InventoryStatus;
-import com.kaizenflow.commerce.proto.inventory.InventoryUpdateEvent;
-import com.kaizenflow.commerce.proto.product.ProductEvent;
-import com.kaizenflow.commerce.proto.product.ProductModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.protobuf.Timestamp;
+import com.kaizenflow.commerce.inventory.domain.enums.InventoryStatus;
 import com.kaizenflow.commerce.inventory.domain.models.Inventory;
 import com.kaizenflow.commerce.inventory.repository.InventoryRepository;
+import com.kaizenflow.commerce.proto.inventory.InventoryUpdateEvent;
+import com.kaizenflow.commerce.proto.product.ProductEvent;
+import com.kaizenflow.commerce.proto.product.ProductModel;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
@@ -32,11 +34,6 @@ public class InventoryService {
     // Get all inventory items
     public List<Inventory> getAllInventory() {
         return inventoryRepository.findAll();
-    }
-
-    // Get inventory by ID
-    public Optional<Inventory> getInventoryById(String id) {
-        return inventoryRepository.findById(id);
     }
 
     // Get inventory by product ID
@@ -54,21 +51,128 @@ public class InventoryService {
         return inventoryRepository.findByWarehouseId(warehouseId);
     }
 
-    // Create new inventory
-    public void createInventory(ProductEvent productEvent) {
+    /**
+     * Creates a new inventory entry for a product and sends an update event.
+     *
+     * @param productEvent The product event containing product information
+     * @return The created inventory entity
+     * @throws IllegalArgumentException if inventory with the same product ID or SKU already exists
+     */
+    public Inventory createInventory(ProductEvent productEvent) {
         ProductModel product = productEvent.getProduct();
-        // Check if productId or productSku already exists
-        if (inventoryRepository.existsByProductId(product.getId())) {
-            throw new IllegalArgumentException(
-                    "Inventory with product ID " + product.getId() + " already exists");
-        }
-        if (inventoryRepository.existsByProductSku(product.getSku())) {
-            throw new IllegalArgumentException(
-                    "Inventory with product SKU " + product.getSku() + " already exists");
-        }
-        Inventory inventory = Inventory.builder().productId(product.getId()).productSku(product.getSku()).build();
+
+        // Validate unique constraints
+        validateUniqueInventory(product.getId(), product.getSku());
+
+        // Build and save inventory entity
+        Inventory inventory = buildInventoryFromProduct(product);
         Inventory saved = inventoryRepository.save(inventory);
 
+        // Send inventory update event
+        sendInventoryUpdateEvent(saved);
+
+        return saved;
+    }
+
+    /**
+     * Updates an existing inventory with a new quantity and sends an update event.
+     *
+     * @param id The inventory ID
+     * @param availableQuantity The new available quantity
+     * @return The updated inventory entity
+     * @throws IllegalArgumentException if inventory with the given ID is not found
+     */
+    public Inventory updateInventory(String id, Integer availableQuantity) {
+        // Find and validate inventory exists
+        Inventory inventory = findInventoryById(id);
+
+        // Update inventory with new quantity
+        updateInventoryQuantity(inventory, availableQuantity);
+
+        // Save changes
+        Inventory saved = inventoryRepository.save(inventory);
+
+        // Send inventory update event
+        sendInventoryUpdateEvent(saved);
+
+        return saved;
+    }
+
+    /**
+     * Validates that no inventory exists with the given product ID or SKU.
+     *
+     * @param productId The product ID to check
+     * @param productSku The product SKU to check
+     * @throws IllegalArgumentException if inventory with the given product ID or SKU already exists
+     */
+    private void validateUniqueInventory(String productId, String productSku) {
+        if (inventoryRepository.existsByProductId(productId)) {
+            throw new IllegalArgumentException(
+                    "Inventory with product ID " + productId + " already exists");
+        }
+        if (inventoryRepository.existsByProductSku(productSku)) {
+            throw new IllegalArgumentException(
+                    "Inventory with product SKU " + productSku + " already exists");
+        }
+    }
+
+    /**
+     * Builds a new Inventory entity from a product model.
+     *
+     * @param product The product model containing product information
+     * @return A new unsaved Inventory entity
+     */
+    private Inventory buildInventoryFromProduct(ProductModel product) {
+        return Inventory.builder()
+                .productId(product.getId())
+                .productSku(product.getSku())
+                .availableQuantity(0) // Default to 0
+                .inventoryStatus(InventoryStatus.OUT_OF_STOCK) // Default status
+                .inStock(false) // Default to not in stock
+                .build();
+    }
+
+    /**
+     * Finds an inventory by ID or throws an exception if not found.
+     *
+     * @param id The inventory ID
+     * @return The found inventory entity
+     * @throws IllegalArgumentException if inventory with the given ID is not found
+     */
+    public Inventory findInventoryById(String id) {
+        return inventoryRepository
+                .findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Inventory with ID " + id + " not found"));
+    }
+
+    /**
+     * Updates an inventory entity with a new quantity and recalculates status.
+     *
+     * @param inventory The inventory entity to update
+     * @param availableQuantity The new available quantity
+     */
+    private void updateInventoryQuantity(Inventory inventory, Integer availableQuantity) {
+        inventory.setAvailableQuantity(availableQuantity);
+
+        // Update inventory status based on quantity
+        if (availableQuantity <= 0) {
+            inventory.setInventoryStatus(InventoryStatus.OUT_OF_STOCK);
+            inventory.setInStock(false);
+        } else if (availableQuantity <= 5) { // Using 5 as threshold for low stock
+            inventory.setInventoryStatus(InventoryStatus.LOW_STOCK);
+            inventory.setInStock(true);
+        } else {
+            inventory.setInventoryStatus(InventoryStatus.IN_STOCK);
+            inventory.setInStock(true);
+        }
+    }
+
+    /**
+     * Creates and sends an inventory update event to Kafka.
+     *
+     * @param inventory The inventory entity to create an event for
+     */
+    private void sendInventoryUpdateEvent(Inventory inventory) {
         Instant instant = Instant.now();
         Timestamp timestamp =
                 Timestamp.newBuilder()
@@ -77,24 +181,20 @@ public class InventoryService {
                         .build();
 
         InventoryUpdateEvent.Builder builder = InventoryUpdateEvent.newBuilder();
-        builder.setProductId(saved.getProductId());
-        builder.setAvailableQuantity(saved.getAvailableQuantity());
-        builder.setInventoryStatus(saved.getInventoryStatus().name());
-        builder.setInStock(saved.getInStock());
+        builder.setProductId(inventory.getProductId());
+        builder.setAvailableQuantity(inventory.getAvailableQuantity());
+        builder.setInventoryStatus(inventory.getInventoryStatus().name());
+        builder.setInStock(inventory.getInStock());
         builder.setTimestamp(timestamp);
 
+        // Send event to Kafka
         kafkaTemplate.send(inventoryTopic, builder.build());
-    }
 
-    // Update inventory
-    public Inventory updateInventory(String id, Inventory inventory) {
-        Optional<Inventory> existingInventory = inventoryRepository.findById(id);
-        if (existingInventory.isPresent()) {
-            inventory.setId(id);
-            return inventoryRepository.save(inventory);
-        } else {
-            throw new IllegalArgumentException("Inventory with ID " + id + " not found");
-        }
+        log.info(
+                "Sent inventory update event for product ID: {}, status: {}, quantity: {}",
+                inventory.getProductId(),
+                inventory.getInventoryStatus(),
+                inventory.getAvailableQuantity());
     }
 
     // Delete inventory

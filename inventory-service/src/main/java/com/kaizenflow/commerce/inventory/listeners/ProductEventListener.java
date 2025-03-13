@@ -1,12 +1,12 @@
 package com.kaizenflow.commerce.inventory.listeners;
 
-import com.kaizenflow.commerce.inventory.service.InventoryService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import com.kaizenflow.commerce.inventory.service.InventoryService;
 import com.kaizenflow.commerce.proto.product.ProductEvent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
