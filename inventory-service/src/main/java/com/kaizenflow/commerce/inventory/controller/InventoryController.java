@@ -68,16 +68,6 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getLowStockInventory(threshold));
     }
 
-    @PostMapping
-    public ResponseEntity<Inventory> createInventory(@RequestBody Inventory inventory) {
-        try {
-            Inventory createdInventory = inventoryService.createInventory(inventory);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdInventory);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<Inventory> updateInventory(
             @PathVariable String id, @RequestBody Inventory inventory) {

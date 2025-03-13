@@ -1,8 +1,16 @@
 package com.kaizenflow.commerce.inventory.service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.protobuf.Timestamp;
+import com.kaizenflow.commerce.inventory.domain.enums.InventoryStatus;
+import com.kaizenflow.commerce.proto.inventory.InventoryUpdateEvent;
+import com.kaizenflow.commerce.proto.product.ProductEvent;
+import com.kaizenflow.commerce.proto.product.ProductModel;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +24,10 @@ import lombok.RequiredArgsConstructor;
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
+    private final KafkaTemplate<String, InventoryUpdateEvent> kafkaTemplate;
+
+    @Value("${kafka.topic.inventory-events}")
+    private String inventoryTopic;
 
     // Get all inventory items
     public List<Inventory> getAllInventory() {
@@ -43,17 +55,35 @@ public class InventoryService {
     }
 
     // Create new inventory
-    public Inventory createInventory(Inventory inventory) {
+    public void createInventory(ProductEvent productEvent) {
+        ProductModel product = productEvent.getProduct();
         // Check if productId or productSku already exists
-        if (inventoryRepository.existsByProductId(inventory.getProductId())) {
+        if (inventoryRepository.existsByProductId(product.getId())) {
             throw new IllegalArgumentException(
-                    "Inventory with product ID " + inventory.getProductId() + " already exists");
+                    "Inventory with product ID " + product.getId() + " already exists");
         }
-        if (inventoryRepository.existsByProductSku(inventory.getProductSku())) {
+        if (inventoryRepository.existsByProductSku(product.getSku())) {
             throw new IllegalArgumentException(
-                    "Inventory with product SKU " + inventory.getProductSku() + " already exists");
+                    "Inventory with product SKU " + product.getSku() + " already exists");
         }
-        return inventoryRepository.save(inventory);
+        Inventory inventory = Inventory.builder().productId(product.getId()).productSku(product.getSku()).build();
+        Inventory saved = inventoryRepository.save(inventory);
+
+        Instant instant = Instant.now();
+        Timestamp timestamp =
+                Timestamp.newBuilder()
+                        .setSeconds(instant.getEpochSecond())
+                        .setNanos(instant.getNano())
+                        .build();
+
+        InventoryUpdateEvent.Builder builder = InventoryUpdateEvent.newBuilder();
+        builder.setProductId(saved.getProductId());
+        builder.setAvailableQuantity(saved.getAvailableQuantity());
+        builder.setInventoryStatus(saved.getInventoryStatus().name());
+        builder.setInStock(saved.getInStock());
+        builder.setTimestamp(timestamp);
+
+        kafkaTemplate.send(inventoryTopic, builder.build());
     }
 
     // Update inventory
@@ -145,5 +175,12 @@ public class InventoryService {
     // Get low stock inventory (available quantity below threshold)
     public List<Inventory> getLowStockInventory(Integer threshold) {
         return inventoryRepository.findByAvailableQuantityLessThan(threshold);
+    }
+
+    private InventoryStatus determineInventoryStatus(int quantity, int reserved) {
+        int available = quantity - reserved;
+        if (available <= 0) return InventoryStatus.OUT_OF_STOCK;
+        if (available < 10) return InventoryStatus.LOW_STOCK; // Threshold could be configurable
+        return InventoryStatus.IN_STOCK;
     }
 }

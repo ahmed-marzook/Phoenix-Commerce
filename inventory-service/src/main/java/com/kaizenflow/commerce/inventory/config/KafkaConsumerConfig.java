@@ -22,7 +22,7 @@ public class KafkaConsumerConfig {
     private String bootstrapServers;
 
     @Bean
-    public ConsumerFactory<String, ProductEvent> addressBookConsumerFactory() {
+    public ConsumerFactory<String, ProductEvent> productEventConsumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "inventory-group");
@@ -38,10 +38,10 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ProductEvent>
-            addressBookKafkaListenerContainerFactory() {
+            productEventKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, ProductEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(addressBookConsumerFactory());
+        factory.setConsumerFactory(productEventConsumerFactory());
         return factory;
     }
 }

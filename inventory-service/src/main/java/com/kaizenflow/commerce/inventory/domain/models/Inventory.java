@@ -2,6 +2,7 @@ package com.kaizenflow.commerce.inventory.domain.models;
 
 import java.time.LocalDateTime;
 
+import com.kaizenflow.commerce.inventory.domain.enums.InventoryStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -30,6 +31,10 @@ public class Inventory {
     @Builder.Default private Integer availableQuantity = 0;
     @Builder.Default private Integer reservedQuantity = 0;
     private String warehouseId;
+
+    @Builder.Default private InventoryStatus inventoryStatus = InventoryStatus.OUT_OF_STOCK;
+
+    @Builder.Default private Boolean inStock = Boolean.FALSE;
 
     @CreatedDate
     private LocalDateTime createdAt; // Spring Data: Automatically sets creation timestamp
