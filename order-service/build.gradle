@@ -66,14 +66,14 @@ openApiGenerate {
 	generatorName = "spring"
 	inputSpec = "$rootDir/src/main/resources/api/order-service-api.yaml"
 	outputDir = "${layout.buildDirectory.asFile.get()}/generated"
-	apiPackage = "com.example.orderservice.api"
-	modelPackage = "com.example.orderservice.model"
+	apiPackage = "com.kaizenflow.commerce.order.api"
+	modelPackage = "com.kaizenflow.commerce.order.model"
 	configOptions = [
-			interfaceOnly: "true",
-			useSpringBoot3: "true",
-			openApiNullable: "false",
-			useTags: "true",
-			dateLibrary: "java8"
+		interfaceOnly: "true",
+		useSpringBoot3: "true",
+		openApiNullable: "false",
+		useTags: "true",
+		dateLibrary: "java8"
 	]
 }
 
@@ -81,7 +81,7 @@ sourceSets {
 	main {
 		java {
 			srcDirs += [
-					"$buildDir/generated/src/main/java"
+				"$buildDir/generated/src/main/java"
 			]
 		}
 	}
