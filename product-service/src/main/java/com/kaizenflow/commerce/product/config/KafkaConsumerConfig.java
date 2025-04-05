@@ -3,7 +3,6 @@ package com.kaizenflow.commerce.product.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.kaizenflow.commerce.proto.inventory.InventoryUpdateEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +13,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 
 import com.kaizenflow.commerce.product.serializer.SimpleProtobufDeserializer;
+import com.kaizenflow.commerce.proto.inventory.InventoryUpdateEvent;
 
 @Configuration
 public class KafkaConsumerConfig {
